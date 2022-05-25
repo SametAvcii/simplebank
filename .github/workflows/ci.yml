@@ -15,9 +15,9 @@ jobs:
       postgres:
         image: postgres:12
         env:
-          POSTGRES_PASSWORD: secret
           POSTGRES_USER: root
-          POSTGRES_DB: simple_Bank
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: simple_bank
         ports:
           - 5432:5432
         options: >-
@@ -44,11 +44,6 @@ jobs:
             sudo mv migrate /usr/bin/migrate
             which migrate
         
-    
-        - name: Postgres 
-          run: make postgres
-        - name: Create DB
-          run: make createdb
           
         - name: Run migrations
           run: make migrateup
