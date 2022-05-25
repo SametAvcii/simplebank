@@ -45,7 +45,8 @@ jobs:
             which migrate
         
     
-
+        - name: Postgres 
+          run: make postgres
         - name: Create DB
           run: make createdb
           
