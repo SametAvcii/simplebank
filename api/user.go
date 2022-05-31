@@ -6,6 +6,7 @@ import (
 	db "github.com/sametavcii/simplebank/db/sqlc"
 	"github.com/sametavcii/simplebank/util"
 	"net/http"
+	"time"
 )
 
 type createUserRequest struct {
@@ -13,6 +14,14 @@ type createUserRequest struct {
 	Password string `json:"password" binding:"required,min=8"`
 	FullName string `json:"full_name" binding:"required"`
 	Email    string `json:"email" binding:"required,email"`
+}
+
+type createResponseBody struct {
+	Username          string    `json:"username"`
+	FullName          string    `json:"full_name"`
+	Email             string    `json:"email"`
+	PasswordChangedAt time.Time `json:"password_changed_at"`
+	CreatedAt         time.Time `json:"created_at"`
 }
 
 func (server *Server) createUser(ctx *gin.Context) {
@@ -45,5 +54,13 @@ func (server *Server) createUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	ctx.JSON(http.StatusOK, user)
+
+	rsp := createResponseBody{
+		Username:          user.Username,
+		FullName:          user.FullName,
+		Email:             user.Email,
+		CreatedAt:         user.CreatedAt,
+		PasswordChangedAt: user.PasswordChangedAt,
+	}
+	ctx.JSON(http.StatusOK, rsp)
 }
