@@ -17,18 +17,19 @@ import (
 	"testing"
 )
 
-type eqCreateUserParams struct {
+/*type eqCreateUserParamsMatcher struct {
 	arg      db.CreateUserParams
 	password string
 }
 
 func EqCreateUserParams(arg db.CreateUserParams, password string) gomock.Matcher {
-	return EqCreateUserParams(arg, password)
-}
-
+	return eqCreateUserParamsMatcher{arg, password}
+}*/
 func TestCreateUserAPI(t *testing.T) {
 
 	user, password := RandomUser(t)
+	hashPassword, err := util.HashPassword(password)
+	require.NoError(t, err)
 	testCases := []struct {
 		name          string
 		body          gin.H
@@ -39,18 +40,19 @@ func TestCreateUserAPI(t *testing.T) {
 			name: "OK",
 			body: gin.H{
 				"username":  user.Username,
-				"password":  password,
+				"password":  hashPassword,
 				"full_name": user.FullName,
 				"email":     user.Email,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.CreateUserParams{
-					Username: user.Username,
-					FullName: user.FullName,
-					Email:    user.Email,
+					Username:       user.Username,
+					HashedPassword: hashPassword,
+					FullName:       user.FullName,
+					Email:          user.Email,
 				}
 				store.EXPECT().
-					CreateAccount(gomock.Any(), EqCreateUserParams(arg, password)).
+					CreateUser(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(user, nil)
 			},
@@ -104,14 +106,13 @@ func TestCreateUserAPI(t *testing.T) {
 				"full_name": user.FullName,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Times(1).Return(db.Users{}, &pq.Error{Code: "#23505"})
+				store.EXPECT().CreateUser(gomock.Any(), gomock.Any()).Times(1).Return(db.Users{}, &pq.Error{Code: "23505"})
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusForbidden, recorder.Code)
 
 			},
 		},
-
 		{
 			name: "InvalidEmail",
 			body: gin.H{
@@ -147,6 +148,7 @@ func TestCreateUserAPI(t *testing.T) {
 			},
 		},
 	}
+
 	for i := range testCases {
 		tc := testCases[i]
 
@@ -172,11 +174,9 @@ func TestCreateUserAPI(t *testing.T) {
 			tc.checkResponse(recorder)
 		})
 	}
-
 }
-
 func RandomUser(t *testing.T) (user db.Users, password string) {
-	password = util.RandomString(7)
+	password = util.RandomString(8)
 	hashedPassword, err := util.HashPassword(password)
 	require.NoError(t, err)
 
@@ -188,7 +188,8 @@ func RandomUser(t *testing.T) (user db.Users, password string) {
 	}
 	return
 }
-func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.Users) {
+
+/*func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.Users) {
 	data, err := ioutil.ReadAll(body)
 	require.NoError(t, err)
 
@@ -199,4 +200,18 @@ func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.Users) {
 	require.Equal(t, user.Email, gotUsers.Email)
 	require.Equal(t, user.FullName, gotUsers.FullName)
 	require.NotEmpty(t, gotUsers.HashedPassword)
+}*/
+
+func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.Users) {
+	data, err := ioutil.ReadAll(body)
+	require.NoError(t, err)
+
+	var gotUser db.Users
+	err = json.Unmarshal(data, &gotUser)
+
+	require.NoError(t, err)
+	require.Equal(t, user.Username, gotUser.Username)
+	require.Equal(t, user.FullName, gotUser.FullName)
+	require.Equal(t, user.Email, gotUser.Email)
+	require.Empty(t, gotUser.HashedPassword)
 }
