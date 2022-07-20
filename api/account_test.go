@@ -5,19 +5,18 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/golang/mock/gomock"
 	mockdb "github.com/sametavcii/simplebank/db/mock"
 	db "github.com/sametavcii/simplebank/db/sqlc"
 	"github.com/sametavcii/simplebank/token"
 	"github.com/sametavcii/simplebank/util"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
-
-	"github.com/gin-gonic/gin"
-	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGetAccountAPI(t *testing.T) {
