@@ -1,13 +1,16 @@
 package main
 
 import (
-	"fmt"
+	"database/sql"
 	_ "github.com/lib/pq"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/sametavcii/simplebank/api"
+	db "github.com/sametavcii/simplebank/db/sqlc"
+	"github.com/sametavcii/simplebank/util"
+	"log"
 )
 
 func main() {
-	/*config, err := util.LoadConfig(".")
+	config, err := util.LoadConfig(".")
 	if err != nil {
 		log.Fatal("Cannot load  :", err)
 	}
@@ -24,16 +27,5 @@ func main() {
 	err = server.Start(config.ServerAddress)
 	if err != nil {
 		log.Fatal("Cannot Start Server:", err)
-	}*/
-
-	fmt.Println(HashPassword("asd123"))
-
-}
-func HashPassword(password string) (string, error) {
-	hashPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return "", fmt.Errorf("failed to hash password %w", err)
 	}
-	fmt.Println(hashPassword)
-	return string(hashPassword), nil
 }
